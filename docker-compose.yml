@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  gen:
+    build: .
+    ports:
+      - "8080:8080"
+  left:
+    image: prom/prometheus:v2.32.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./prom_left.yml:/etc/prometheus/prometheus.yml"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=1m"
+      - "--storage.tsdb.retention.size=4KB"
+      - "--storage.tsdb.max-block-duration=10s"
+      - "--storage.tsdb.min-block-duration=10s"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    links:
+      - gen
+      - right
+  right:
+    image: prom/prometheus:v2.32.1
+    ports:
+      - "9091:9090"
+    volumes:
+      - "./prom_right.yml:/etc/prometheus/prometheus.yml"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=1m"
+      - "--storage.tsdb.retention.size=4KB"
+      - "--storage.tsdb.max-block-duration=10s"
+      - "--storage.tsdb.min-block-duration=10s"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--enable-feature=remote-write-receiver"
+
